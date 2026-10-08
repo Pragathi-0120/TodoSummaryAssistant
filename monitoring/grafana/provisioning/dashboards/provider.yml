@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Todo Summary dashboards
+    orgId: 1
+    folder: DevOps
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

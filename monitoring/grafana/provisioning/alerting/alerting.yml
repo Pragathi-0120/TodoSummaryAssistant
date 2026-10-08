@@ -1,0 +1,134 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: Placeholder contact point
+    receivers:
+      - uid: placeholder_email
+        type: email
+        settings:
+          addresses: replace-me@example.invalid
+        disableResolveMessage: false
+
+policies:
+  - orgId: 1
+    receiver: Placeholder contact point
+    group_by:
+      - alertname
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+
+groups:
+  - orgId: 1
+    name: Todo Summary demo alerts
+    folder: DevOps
+    interval: 10s
+    rules:
+      - uid: todo_backend_down
+        title: Backend service down
+        condition: B
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: min(up{job="todo-summary-backend"}) or vector(0)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+              range: false
+          - refId: B
+            datasourceUid: __expr__
+            relativeTimeRange:
+              from: 0
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: Backend service is down
+          description: Prometheus has not scraped the backend successfully for 2 minutes.
+        labels:
+          severity: critical
+
+      - uid: todo_host_cpu_high
+        title: High host CPU
+        condition: B
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+              range: false
+          - refId: B
+            datasourceUid: __expr__
+            relativeTimeRange:
+              from: 0
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [85]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: classic_conditions
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        annotations:
+          summary: Host CPU usage is above 85 percent
+          description: Average host CPU usage has exceeded 85 percent for 10 minutes.
+        labels:
+          severity: warning

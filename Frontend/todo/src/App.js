@@ -7,22 +7,21 @@ import './styles/App.css';
 
 function App() {
   const [todos, setTodos] = useState([]);
-  const [editingTodo, setEditingTodo] = useState(null);
   const [notification, setNotification] = useState({ message: '', type: '' });
-
+  const [editingTodo, setEditingTodo] = useState(null);
   useEffect(() => {
-    fetchTodos();
-  }, []);
+    const loadTodos = async () => {
+      try {
+        const response = await todoService.getAllTodos();
+        setTodos(response.data);
+      } catch (error) {
+        console.error('Error fetching todos:', error);
+        setNotification({ message: 'Error fetching todos.', type: 'error' });
+      }
+    };
 
-  const fetchTodos = async () => {
-    try {
-      const response = await todoService.getAllTodos();
-      setTodos(response.data);
-    } catch (error) {
-      console.error('Error fetching todos:', error);
-      showNotification('Error fetching todos.', 'error');
-    }
-  };
+    loadTodos();
+  }, []);
 
   const addTodo = async (todo) => {
     try {
